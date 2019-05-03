@@ -11,7 +11,8 @@ According to the test of pytorch github, [the test config](https://github.com/hu
 
 ### Main
 ```
-python bert_to_onnx.py
+python bert_to_onnx_fixed_seq.py
+python bert_to_onnx_dynamic_seq.py
 ```
 
 ### Tests
