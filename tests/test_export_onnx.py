@@ -14,6 +14,7 @@ ONNX_FOLDER = "./onnx/"
 OPERATOR_EXPORT_TYPE = torch._C._onnx.OperatorExportTypes.ONNX
 BERT_CONFIG_PATH = "./models/bert_config.json"
 
+
 class TestBase(unittest.TestCase):
     def setUp(self):
         org_input_shape = (3, 100, 100)
@@ -224,7 +225,7 @@ class TestBertModelEmbedding(unittest.TestCase):
 
 
     def test_convert_embedding_and_encoder_pooling_onnx(self):
-        model = BertEmbeddings_custom(BertConfig.from_json_file(BERT_CONFIG_PATH))
+        model = BertModel_custom(BertConfig.from_json_file(BERT_CONFIG_PATH))
         model.train(False)
 
         output = torch.onnx.export(model,
