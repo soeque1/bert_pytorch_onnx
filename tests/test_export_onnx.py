@@ -12,7 +12,6 @@ from models.bert_custom import BertModel_emb_custom, BertModel_emb_encoder_custo
 
 ONNX_FOLDER = "./onnx/"
 OPERATOR_EXPORT_TYPE = torch._C._onnx.OperatorExportTypes.ONNX
-## https://github.com/huggingface/pytorch-pretrained-BERT/blob/68a889ee43916380f26a3c995e1638af41d75066/tests/modeling_test.py
 BERT_CONFIG_PATH = "./models/bert_config.json"
 
 
