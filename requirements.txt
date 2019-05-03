@@ -1,0 +1,9 @@
+pyyaml==3.13
+#-e git+https://github.com/pytorch/pytorch.git@6d307db5b465b9679f8bcc6b2e075db5782b2906#egg=torch
+torchvision==0.2.1
+pytorch-pretrained-bert==0.6.1
+onnx==1.5.0
+onnxruntime==0.3.0
+pytest
+
+## brew install libomp
