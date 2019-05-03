@@ -43,6 +43,8 @@ if __name__ == '__main__':
                                )
     print("Export of torch_model.onnx complete!")
 
+    print(model(*(torch.LongTensor(i) for i in inf_dummy_input))[0][0][0:5])
+
     sess = onnxruntime.InferenceSession(MODEL_ONNX_PATH)
     pred_onnx = sess.run(None, {'input_ids':np.array(inf_dummy_input[0]),
                                 'token_type_ids':np.array(inf_dummy_input[1]),
