@@ -8,7 +8,7 @@ import onnxruntime
 from pytorch_pretrained_bert import BertConfig, BertModel
 from models.base import Model
 from models.bert_custom import BertSelfAttention_custom, BertEmbeddings_custom
-from models.bert_custom import BertModel_emb_custom, BertModel_emb_encoder_custom
+from models.bert_custom import BertModel_emb_custom, BertModel_emb_encoder_custom, BertModel_custom
 
 ONNX_FOLDER = "./onnx/"
 OPERATOR_EXPORT_TYPE = torch._C._onnx.OperatorExportTypes.ONNX
@@ -174,7 +174,7 @@ class TestBertModelEmbedding(unittest.TestCase):
 
         self.model_onnx_path = ONNX_FOLDER + "torch_integ_bert_emb_model.onnx"
 
-    @pytest.mark.skip('')
+
     def test_convert_embedding_onnx(self):
         model = BertModel_emb_custom(BertConfig.from_json_file(BERT_CONFIG_PATH))
         model.train(False)
@@ -188,7 +188,7 @@ class TestBertModelEmbedding(unittest.TestCase):
                                    )
         print("Export of torch_model.onnx complete!")
 
-    @pytest.mark.skip('')
+
     def test_inference_embedding_onnx(self):
         onnx_model = onnx.load(self.model_onnx_path)
         sess = onnxruntime.InferenceSession(onnx_model.SerializeToString())
@@ -221,6 +221,31 @@ class TestBertModelEmbedding(unittest.TestCase):
                                     'attention_mask':np.array(self.inf_dummy_input[2]),
                                     'position_ids':np.array(self.inf_dummy_input[3])})
         print(pred_onnx[0][0:5])
+
+
+    def test_convert_embedding_and_encoder_pooling_onnx(self):
+        model = BertEmbeddings_custom(BertConfig.from_json_file(BERT_CONFIG_PATH))
+        model.train(False)
+
+        output = torch.onnx.export(model,
+                                   self.org_dummy_input,
+                                   self.model_onnx_path,
+                                   verbose=True,
+                                   operator_export_type=OPERATOR_EXPORT_TYPE,
+                                   input_names=['input_ids', 'token_type_ids', 'attention_mask', 'position_ids']
+                                   )
+        print("Export of torch_model.onnx complete!")
+
+
+    def test_inference_embedding_and_encoder_pooling_onnx(self):
+        onnx_model = onnx.load(self.model_onnx_path)
+        sess = onnxruntime.InferenceSession(onnx_model.SerializeToString())
+        pred_onnx = sess.run(None, {'input_ids':np.array(self.inf_dummy_input[0]),
+                                    'token_type_ids':np.array(self.inf_dummy_input[1]),
+                                    'attention_mask':np.array(self.inf_dummy_input[2]),
+                                    'position_ids':np.array(self.inf_dummy_input[3])})
+        print(pred_onnx[0][0:5])
+
 
 
 if __name__ == '__main__':

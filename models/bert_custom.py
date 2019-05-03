@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 import torch.onnx as torch_onnx
-from pytorch_pretrained_bert.modeling import BertPreTrainedModel, BertSelfOutput, BertSelfAttention, BertEncoder, BertEmbeddings
+from pytorch_pretrained_bert.modeling import BertPreTrainedModel, BertSelfOutput, BertSelfAttention, BertEncoder, BertPooler
 
 class BertSelfAttention_custom(nn.Module):
     def __init__(self, config):
@@ -232,3 +232,33 @@ class BertModel_emb_encoder_custom(BertPreTrainedModel):
                                       extended_attention_mask,
                                       output_all_encoded_layers=output_all_encoded_layers)
         return encoded_layers
+
+
+class BertModel_custom(BertPreTrainedModel):
+    def __init__(self, config):
+        super(BertModel_custom, self).__init__(config)
+        self.embeddings = BertEmbeddings_custom(config)
+        self.encoder = BertEncoder(config)
+        self.pooler = BertPooler(config)
+        self.apply(self.init_bert_weights)
+
+    def forward(self, input_ids, token_type_ids=None, attention_mask=None, position_ids=None, output_all_encoded_layers=True):
+        if attention_mask is None:
+            attention_mask = torch.ones_like(input_ids)
+        if token_type_ids is None:
+            token_type_ids = torch.zeros_like(input_ids)
+
+        extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2)
+        extended_attention_mask = extended_attention_mask.to(dtype=next(self.parameters()).dtype) # fp16 compatibility
+        extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
+
+        embedding_output = self.embeddings(input_ids, token_type_ids, position_ids)
+        encoded_layers = self.encoder(embedding_output,
+                                      extended_attention_mask,
+                                      output_all_encoded_layers=output_all_encoded_layers)
+
+        sequence_output = encoded_layers[-1]
+        pooled_output = self.pooler(sequence_output)
+        if not output_all_encoded_layers:
+            encoded_layers = encoded_layers[-1]
+        return encoded_layers, pooled_output
