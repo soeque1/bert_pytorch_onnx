@@ -1,8 +1,6 @@
 import math
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
-import torch.onnx as torch_onnx
 from pytorch_pretrained_bert.modeling import BertPreTrainedModel, BertSelfOutput, BertSelfAttention, BertEncoder, BertPooler
 
 class BertSelfAttention_custom(nn.Module):

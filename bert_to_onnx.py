@@ -10,14 +10,14 @@ def make_position_input(input_ids):
     return position_ids
 
 def make_train_dummy_input():
-    org_input_ids = torch.LongTensor([[31, 51, 99, 1]])
+    org_input_ids = torch.LongTensor([[31, 51, 98, 1]])
     org_token_type_ids = torch.LongTensor([[1, 1, 1, 1]])
     org_input_mask = torch.LongTensor([[0, 0, 1, 1]])
     org_position_ids = make_position_input(org_input_ids)
     return (org_input_ids, org_token_type_ids, org_input_mask, org_position_ids)
 
 def make_inference_dummy_input():
-    inf_input_ids = [[31, 51, 99]]
+    inf_input_ids = [[31, 51, 98]]
     inf_token_type_ids = [[1, 1, 1]]
     inf_input_mask = [[0, 0, 1]]
     inf_position_ids = range(0, len(inf_input_ids[0]))
