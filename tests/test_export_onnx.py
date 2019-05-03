@@ -1,12 +1,14 @@
 import unittest
+import pytest
 import torch
 from torch.autograd import Variable
 import onnx
 import numpy as np
 import onnxruntime
-from pytorch_pretrained_bert import BertConfig
+from pytorch_pretrained_bert import BertConfig, BertModel
 from models.base import Model
 from models.bert_custom import BertSelfAttention_custom, BertEmbeddings_custom
+from models.bert_custom import BertModel_emb_custom, BertModel_emb_encoder_custom
 
 ONNX_FOLDER = "./onnx/"
 OPERATOR_EXPORT_TYPE = torch._C._onnx.OperatorExportTypes.ONNX
@@ -41,7 +43,7 @@ class TestBase(unittest.TestCase):
         print(pred_onnx[0][0:5])
 
 
-class TestBertAttention(unittest.TestCase):
+class TestBertModuleAttention(unittest.TestCase):
     def setUp(self):
         org_seq_len = 4
         org_hidden_shape = (org_seq_len, 768)
@@ -78,7 +80,8 @@ class TestBertAttention(unittest.TestCase):
                                     'attention_mask':np.array(self.inf_dummy_input[1])})
         print(pred_onnx[0][0:5])
 
-class TestBertEmbedding(unittest.TestCase):
+
+class TestBertModuleEmbedding(unittest.TestCase):
     def setUp(self):
         org_input_ids = torch.LongTensor([[31, 51, 99, 1]])
         org_token_type_ids = torch.LongTensor([0, 0, 1, 0])
@@ -114,6 +117,109 @@ class TestBertEmbedding(unittest.TestCase):
         pred_onnx = sess.run(None, {'input_ids':np.array(self.inf_dummy_input[0]),
                                     'token_type_ids':np.array(self.inf_dummy_input[1]),
                                     'position_ids':np.array(self.inf_dummy_input[2])})
+        print(pred_onnx[0][0:5])
+
+
+class TestBertModelOrg(unittest.TestCase):
+    def setUp(self):
+        org_input_ids = torch.LongTensor([[31, 51, 99, 1]])
+        org_token_type_ids = torch.LongTensor([[1, 1, 1, 1]])
+        org_input_mask = torch.LongTensor([[0, 0, 1, 1]])
+        self.org_dummy_input = (org_input_ids, org_token_type_ids, org_input_mask)
+
+        inf_input_ids = torch.LongTensor([[31, 51, 99, 1]])
+        inf_token_type_ids = torch.LongTensor([[0, 0, 1, 1]])
+        inf_input_mask = torch.LongTensor([[0, 0, 1, 1]])
+        self.inf_dummy_input = (inf_input_ids, inf_token_type_ids, inf_input_mask)
+        self.model_onnx_path = ONNX_FOLDER + "torch_integ_bert_org_model.onnx"
+
+    def test_convert_onnx(self):
+        model = BertModel(BertConfig.from_json_file(BERT_CONFIG_PATH))
+        model.train(False)
+
+        output = torch.onnx.export(model,
+                                   self.org_dummy_input,
+                                   self.model_onnx_path,
+                                   verbose=True,
+                                   operator_export_type=OPERATOR_EXPORT_TYPE,
+                                   input_names=['input_ids', 'token_type_ids', 'attention_mask']
+                                   )
+        print("Export of torch_model.onnx complete!")
+
+
+    def test_inference_embedding_onnx(self):
+        onnx_model = onnx.load(self.model_onnx_path)
+        sess = onnxruntime.InferenceSession(onnx_model.SerializeToString())
+        pred_onnx = sess.run(None, {'input_ids':np.array(self.inf_dummy_input[0]),
+                                    'token_type_ids':np.array(self.inf_dummy_input[1]),
+                                    'attention_mask':np.array(self.inf_dummy_input[2])})
+        print(pred_onnx[0][0:5])
+
+
+class TestBertModelEmbedding(unittest.TestCase):
+    def setUp(self):
+        org_input_ids = torch.LongTensor([[31, 51, 99, 1]])
+        org_token_type_ids = torch.LongTensor([[1, 1, 1, 1]])
+        org_input_mask = torch.LongTensor([[0, 0, 1, 1]])
+        org_position_ids = torch.LongTensor(torch.ones_like(org_input_ids[0]))
+        org_position_ids = org_position_ids.cumsum(dim=0) - 1
+        self.org_dummy_input = (org_input_ids, org_token_type_ids, org_input_mask, org_position_ids)
+
+        inf_input_ids = torch.LongTensor([[31, 51, 99]])
+        inf_token_type_ids = torch.LongTensor([[0, 0, 1]])
+        inf_input_mask = torch.LongTensor([[0, 0, 1]])
+        inf_position_ids = torch.ones_like(inf_input_ids[0])
+        inf_position_ids = inf_position_ids.cumsum(dim=0) - 1
+        self.inf_dummy_input = (inf_input_ids, inf_token_type_ids, inf_input_mask, inf_position_ids)
+
+        self.model_onnx_path = ONNX_FOLDER + "torch_integ_bert_emb_model.onnx"
+
+    @pytest.mark.skip('')
+    def test_convert_embedding_onnx(self):
+        model = BertModel_emb_custom(BertConfig.from_json_file(BERT_CONFIG_PATH))
+        model.train(False)
+
+        output = torch.onnx.export(model,
+                                   self.org_dummy_input,
+                                   self.model_onnx_path,
+                                   verbose=True,
+                                   operator_export_type=OPERATOR_EXPORT_TYPE,
+                                   input_names=['input_ids', 'token_type_ids', 'attention_mask', 'position_ids']
+                                   )
+        print("Export of torch_model.onnx complete!")
+
+    @pytest.mark.skip('')
+    def test_inference_embedding_onnx(self):
+        onnx_model = onnx.load(self.model_onnx_path)
+        sess = onnxruntime.InferenceSession(onnx_model.SerializeToString())
+        pred_onnx = sess.run(None, {'input_ids':np.array(self.inf_dummy_input[0]),
+                                    'token_type_ids':np.array(self.inf_dummy_input[1]),
+                                    'attention_mask':np.array(self.inf_dummy_input[2]),
+                                    'position_ids':np.array(self.inf_dummy_input[3])})
+        print(pred_onnx[0][0:5])
+
+
+    def test_convert_embedding_and_encoder_onnx(self):
+        model = BertModel_emb_encoder_custom(BertConfig.from_json_file(BERT_CONFIG_PATH))
+        model.train(False)
+
+        output = torch.onnx.export(model,
+                                   self.org_dummy_input,
+                                   self.model_onnx_path,
+                                   verbose=True,
+                                   operator_export_type=OPERATOR_EXPORT_TYPE,
+                                   input_names=['input_ids', 'token_type_ids', 'attention_mask', 'position_ids']
+                                   )
+        print("Export of torch_model.onnx complete!")
+
+
+    def test_inference_embedding_and_encoder_onnx(self):
+        onnx_model = onnx.load(self.model_onnx_path)
+        sess = onnxruntime.InferenceSession(onnx_model.SerializeToString())
+        pred_onnx = sess.run(None, {'input_ids':np.array(self.inf_dummy_input[0]),
+                                    'token_type_ids':np.array(self.inf_dummy_input[1]),
+                                    'attention_mask':np.array(self.inf_dummy_input[2]),
+                                    'position_ids':np.array(self.inf_dummy_input[3])})
         print(pred_onnx[0][0:5])
 
 
