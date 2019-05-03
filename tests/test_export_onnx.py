@@ -7,8 +7,8 @@ import numpy as np
 import onnxruntime
 from pytorch_pretrained_bert import BertConfig, BertModel
 from models.base import Model
-from models.bert_custom import BertSelfAttention_custom, BertEmbeddings_custom
-from models.bert_custom import BertModel_emb_custom, BertModel_emb_encoder_custom, BertModel_custom
+from models.bert_custom_modules import BertSelfAttention_custom, BertEmbeddings_custom, BertModel_emb_custom, BertModel_emb_encoder_custom
+from models.bert_custom import BertModel_custom
 
 ONNX_FOLDER = "./onnx/"
 OPERATOR_EXPORT_TYPE = torch._C._onnx.OperatorExportTypes.ONNX
