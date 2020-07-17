@@ -1,5 +1,7 @@
 # onnx
 onnx/
+onnxruntime/
+tutorials/
 
 # Pycharm
 .idea

@@ -32,7 +32,8 @@ if __name__ == '__main__':
                                MODEL_ONNX_PATH,
                                verbose=True,
                                operator_export_type=OPERATOR_EXPORT_TYPE,
-                               input_names=['input_ids', 'token_type_ids', 'attention_mask']
+                               input_names=['input_ids', 'token_type_ids', 'attention_mask'],
+                               output_names=['output']
                                )
     print("Export of torch_model.onnx complete!")
 

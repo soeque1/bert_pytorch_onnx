@@ -11,11 +11,37 @@ According to the test of pytorch github, [the test config](https://github.com/hu
 
 ### Main
 ```
+mkdir onnx
 python bert_to_onnx_fixed_seq.py
 python bert_to_onnx_dynamic_seq.py
+```
+
+### (Prepare) Server
+```
+git clone https://github.com/microsoft/onnxruntime.git --recursive
+docker build -t mcr.microsoft.com/azureml/onnxruntime:latest -f onnxruntime/dockerfiles/Dockerfile.server onnxruntime/dockerfiles/
+```
+
+#### (RUN) Server (HTTP)
+```
+docker run -p 8001:8001 -v $PWD/:/usr/server mcr.microsoft.com/azureml/onnxruntime:latest --log_level verbose --model_path=/usr/server/onnx/torch_bert_fixed.onnx --model_name=bert --model_version=1
+```
+
+#### (Test) Client
+```
+PYTHONPATH=./tutorials/tutorials python test_client.py
+```
+
+or
+
+```
+curl -X POST -d "@xxx.json" -H "Content-Type: application/json" http://0.0.0.0:8001/v1/models/bert/versions/1:predict
 ```
 
 ### Tests
 ```
 python -m pytest tests
 ```
+
+### TODO:
+- gRPC
