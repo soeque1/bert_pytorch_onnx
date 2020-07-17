@@ -38,8 +38,7 @@ def main():
         request_message.inputs[name].dims.extend(i.dims)
         request_message.inputs[name].raw_data = i.raw_data
 
-    message_data = MessageToJson(request_message)
-    json_str = MessageToJson(request_message, use_integers_for_enums=True)
+    json_str = MessageToJson(request_message)
     message_data = json.loads(json_str)
     response = requests.post(inference_url, headers=request_headers, json=message_data)
 
