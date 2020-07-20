@@ -24,7 +24,7 @@ docker build -t mcr.microsoft.com/azureml/onnxruntime:latest -f onnxruntime/dock
 
 #### (RUN) Server (HTTP)
 ```
-docker run -p 8001:8001 -v $PWD/:/usr/server mcr.microsoft.com/azureml/onnxruntime:latest --log_level verbose --model_path=/usr/server/onnx/torch_bert_fixed.onnx --model_name=bert --model_version=1
+docker run --name onnx_server -p 8003:8001 -p 8004:50051 -v $PWD/:/usr/server mcr.microsoft.com/azureml/onnxruntime:latest --log_level verbose --model_path=/usr/server/onnx/torch_bert_fixed.onnx --model_name=bert --model_version=1 --http_port 8001 --grpc_port 50051
 ```
 
 #### (Test) Client
